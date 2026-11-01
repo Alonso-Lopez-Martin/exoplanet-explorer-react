@@ -39,14 +39,14 @@ export default function App() {
           
           <div className="module-card" onClick={() => setView('solar')}>
             {/* 🖼️ AQUÍ PUEDES CAMBIAR LA IMAGEN DEL PRIMER BOTÓN */}
-            <div className="module-image" style={{ backgroundImage: "url('/Mars.jpg')" }}></div>
+            <div className="module-image" style={{ backgroundImage: "url('/Hello_World.jpg')" }}></div>
             <h2>Dentro de nuestro Sistema Solar</h2>
             <p>Simulador 3D (Horizons JPL)</p>
           </div>
 
           <div className="module-card" onClick={() => setView('exo')}>
             {/* 🖼️ AQUÍ PUEDES CAMBIAR LA IMAGEN DEL SEGUNDO BOTÓN */}
-            <div className="module-image" style={{ backgroundImage: "url('/Saturn.jpg')" }}></div>
+            <div className="module-image" style={{ backgroundImage: "url('/Galaxy.jpg')" }}></div>
             <h2>Fuera de nuestro Sistema Solar</h2>
             <p>Explorador de Exoplanetas</p>
           </div>
