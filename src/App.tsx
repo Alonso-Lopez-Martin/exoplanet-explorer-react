@@ -31,20 +31,21 @@ export default function App() {
 
   const isNotFound = data.length === 0 && !loading && searchQuery && !error;
 
-  // Ley de la Gestalt: Semejanza y Proximidad (Agrupamos título, imagen y botón)
   if (view === 'home') {
     return (
       <div className="home-container">
-        <h1>Centro de Mando Astrofísico</h1>
+        <h1>Space Explorer</h1>
         <div className="home-grid">
           
           <div className="module-card" onClick={() => setView('solar')}>
-            <div className="module-image" style={{ backgroundImage: "url('/Jupiter_Ganymede.jpg')" }}></div>
+            {/* 🖼️ AQUÍ PUEDES CAMBIAR LA IMAGEN DEL PRIMER BOTÓN */}
+            <div className="module-image" style={{ backgroundImage: "url('/Mars.jpg')" }}></div>
             <h2>Dentro de nuestro Sistema Solar</h2>
             <p>Simulador 3D (Horizons JPL)</p>
           </div>
 
           <div className="module-card" onClick={() => setView('exo')}>
+            {/* 🖼️ AQUÍ PUEDES CAMBIAR LA IMAGEN DEL SEGUNDO BOTÓN */}
             <div className="module-image" style={{ backgroundImage: "url('/Saturn.jpg')" }}></div>
             <h2>Fuera de nuestro Sistema Solar</h2>
             <p>Explorador de Exoplanetas</p>
@@ -60,9 +61,8 @@ export default function App() {
       <div className="view-wrapper">
         <h1>Simulador del Sistema Solar</h1>
         <SolarSystemMap />
-        {/* Botón de volver abajo */}
         <div className="navigation-footer">
-           <button type="button" className="btn-secondary" onClick={() => setView('home')}>← Volver al Centro de Mando</button>
+           <button type="button" className="btn-secondary" onClick={() => setView('home')}>← Volver a la Nave</button>
         </div>
       </div>
     );
@@ -79,9 +79,8 @@ export default function App() {
       <PlanetList planets={data} selectedPlanet={displayPlanet} onSelect={setUserSelectedPlanet} />
       <PlanetViewer planet={displayPlanet} totalMatches={data.length} />
       
-      {/* Botón de volver abajo */}
       <div className="navigation-footer">
-          <button type="button" className="btn-secondary" onClick={() => setView('home')}>← Volver al Centro de Mando</button>
+          <button type="button" className="btn-secondary" onClick={() => setView('home')}>← Volver a la Nave</button>
       </div>
     </div>
   );
