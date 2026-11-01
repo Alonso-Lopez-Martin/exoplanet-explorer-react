@@ -12,17 +12,21 @@ export function PlanetList({ planets, selectedPlanet, onSelect }: PlanetListProp
   return (
     <div className="matches-container">
       <span style={{ color: 'var(--text-color)', marginRight: '10px' }}>Encontrados en este sector:</span>
-      {planets.map((planet) => (
-        <button
-          type="button"
-          key={planet.pl_name}
-          aria-pressed={selectedPlanet?.pl_name === planet.pl_name}
-          className={`match-btn ${selectedPlanet?.pl_name === planet.pl_name ? 'active' : ''}`}
-          onClick={() => onSelect(planet)}
-        >
-          {planet.pl_name}
-        </button>
-      ))}
+      {planets.map((planet) => {
+        // Se calcula una sola vez por botón y se reutiliza en aria y en la clase.
+        const isActive = selectedPlanet?.pl_name === planet.pl_name;
+        return (
+          <button
+            type="button"
+            key={planet.pl_name}
+            aria-pressed={isActive}
+            className={`match-btn ${isActive ? 'active' : ''}`}
+            onClick={() => onSelect(planet)}
+          >
+            {planet.pl_name}
+          </button>
+        );
+      })}
     </div>
   );
 }

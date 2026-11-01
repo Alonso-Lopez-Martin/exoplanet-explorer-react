@@ -257,6 +257,16 @@ button:disabled {
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   text-align: center;
+  /* la tarjeta es un <button>: se anulan los estilos por defecto del navegador */
+  font: inherit;
+  color: inherit;
+  display: block;
+}
+
+.module-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  transform: translateY(-10px);
 }
 
 .module-card:hover {
