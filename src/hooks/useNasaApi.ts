@@ -24,7 +24,7 @@ const LOCAL_ALIASES: Record<string, string> = {
   "smertrios": "HD 149026 b",
   "proxima centauri b": "Proxima Cen b",
   "proxima b": "Proxima Cen b",
-  "ct chamaeleontis b": "CT Cha b", // Solución directa para la abreviatura de constelación
+  "ct chamaeleontis b": "CT Cha b",
   "koi-571.05": "Kepler-186 f",
   "koi 571.05": "Kepler-186 f"
 };
@@ -60,6 +60,12 @@ function buildUrl(query: string): string {
   return `${API_BASE}/TAP/sync?query=${encodeURIComponent(sql)}&format=json`;
 }
 
+// Función de módulo (identidad estable) para que useFetch no relance el efecto.
+// Nota sobre la deduplicación: la tabla `ps` (Planetary Systems) de la NASA puede
+// devolver varias filas para un mismo planeta (distintas publicaciones o soluciones
+// orbitales incluso con default_flag=1) y a veces varía las mayúsculas. Guardamos
+// por `pl_name.toLowerCase()` en un Map para quedarnos con una única entrada por
+// planeta y garantizar que `pl_name` sea una key 100% única en PlanetList.
 function parseExoplanets(json: unknown): Exoplanet[] {
   if (!Array.isArray(json)) throw new Error('Formato inválido.');
   const unique = new Map<string, Exoplanet>();
@@ -69,17 +75,11 @@ function parseExoplanets(json: unknown): Exoplanet[] {
   return [...unique.values()].sort((a, b) => (a.disc_year || 0) - (b.disc_year || 0));
 }
 
-// --- HOOK PRINCIPAL ---
+// Capa fina sobre el hook genérico useFetch: solo sabe construir la consulta
+// ADQL del archivo de exoplanetas. Con query vacía no se hace petición y se
+// devuelve la lista vacía (data se resetea sola).
 export function useNasaApi(query: string) {
-  // Construimos la URL de forma síncrona.
   const activeUrl = query ? buildUrl(query) : null;
-  
   const { data, loading, error, reload } = useFetch(activeUrl, parseExoplanets);
-
-  return { 
-    data: data ?? NO_RESULTS, 
-    loading, 
-    error, 
-    reload 
-  };
+  return { data: data ?? NO_RESULTS, loading, error, reload };
 }

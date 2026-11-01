@@ -15,12 +15,14 @@ export function PlanetList({ planets, selectedPlanet, onSelect }: PlanetListProp
       {planets.map((planet) => {
         // Se calcula una sola vez por botón y se reutiliza en aria y en la clase.
         const isActive = selectedPlanet?.pl_name === planet.pl_name;
+        // Evitamos dejar un espacio final sobrante ("match-btn ") cuando isActive es false.
+        const btnClass = ['match-btn', isActive && 'active'].filter(Boolean).join(' ');
         return (
           <button
             type="button"
             key={planet.pl_name}
             aria-pressed={isActive}
-            className={`match-btn ${isActive ? 'active' : ''}`}
+            className={btnClass}
             onClick={() => onSelect(planet)}
           >
             {planet.pl_name}

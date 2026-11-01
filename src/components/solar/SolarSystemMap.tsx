@@ -9,55 +9,75 @@ import { PlanetBody } from './PlanetBody';
 import { Sun, SUN_RADIUS } from './Sun';
 import { BodyInfoPanel } from './BodyInfoPanel';
 import { BodySelector } from './BodySelector';
+import { SolarLoadingOverlay } from './SolarLoadingOverlay';
 
 const ORIGIN = new THREE.Vector3(0, 0, 0);
 
-// Orquestador del mapa: guarda solo el foco (planeta y luna elegidos) y delega
-// el dibujo en los componentes de esta carpeta. Todo lo demás se deriva.
+interface FocusState {
+  planet: string | null;
+  moon: string | null;
+}
+
+const INITIAL_FOCUS: FocusState = { planet: null, moon: null };
+
+// Orquestador del mapa: guarda el foco en un único estado { planet, moon } para
+// no tener que resetear `selectedMoon` a mano en varios handlers, y delega el
+// dibujo en los componentes de esta carpeta. Todo lo demás se deriva.
 export function SolarSystemMap() {
-  const { positions, loading } = useJplPositions();
-  const [focusedPlanet, setFocusedPlanet] = useState<string | null>(null);
-  const [selectedMoon, setSelectedMoon] = useState<string | null>(null);
+  const { positions, loading, usingFallback } = useJplPositions();
+  const [focus, setFocus] = useState<FocusState>(INITIAL_FOCUS);
 
   const handlePlanetClick = (planetName: string) => {
-    setFocusedPlanet(planetName);
-    setSelectedMoon(null);
+    setFocus({ planet: planetName, moon: null });
+  };
+
+  const handleMoonClick = (moonName: string) => {
+    setFocus(prev => ({ ...prev, moon: moonName }));
   };
 
   const handleResetView = () => {
-    setFocusedPlanet(null);
-    setSelectedMoon(null);
+    setFocus(INITIAL_FOCUS);
   };
 
   // Valores derivados: son búsquedas baratas sobre un array de 8 elementos,
   // por eso se calculan en cada render en vez de memoizarlas o guardarlas en estado.
-  const currentPlanet = planetsData.find(p => p.name === focusedPlanet) ?? null;
-  const currentMoon = currentPlanet?.moons.find(m => m.name === selectedMoon) ?? null;
+  const currentPlanet = planetsData.find(p => p.name === focus.planet) ?? null;
+  const currentMoon = currentPlanet?.moons.find(m => m.name === focus.moon) ?? null;
 
-  let target: { pos: THREE.Vector3; size: number } | null = null;
-  if (focusedPlanet === 'Sol') target = { pos: ORIGIN, size: SUN_RADIUS };
-  else if (currentPlanet && positions?.[currentPlanet.name]) target = { pos: positions[currentPlanet.name], size: currentPlanet.size };
+  let targetCoords: [number, number, number] | null = null;
+  let targetSize = 1;
+
+  if (focus.planet === 'Sol') {
+    targetCoords = [0, 0, 0];
+    targetSize = SUN_RADIUS;
+  } else if (currentPlanet && positions?.[currentPlanet.name]) {
+    const pos = positions[currentPlanet.name];
+    targetCoords = [pos.x, pos.y, pos.z];
+    targetSize = currentPlanet.size;
+  }
 
   return (
-    <div style={{ width: '100%', height: '75vh', background: '#050810', borderRadius: '12px', overflow: 'hidden', border: '1px solid #333', position: 'relative' }}>
-      {loading && (
-        <div role="status" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(5,8,16,0.85)', zIndex: 20, color: 'var(--accent)' }}>
-          <h2>Cargando datos de NASA JPL Horizons para crear el mapa interactivo del sistema solar</h2>
+    <div className="solar-map-container">
+      {loading && <SolarLoadingOverlay />}
+
+      {!loading && usingFallback && (
+        <div role="status" className="solar-fallback-banner">
+          ℹ Efemérides en vivo no disponibles temporalmente; mostrando posiciones orbitales aproximadas.
         </div>
       )}
 
-      {focusedPlanet && (
+      {focus.planet && (
         <BodyInfoPanel
-          focusedName={focusedPlanet}
+          focusedName={focus.planet}
           planet={currentPlanet}
           moon={currentMoon}
-          selectedMoon={selectedMoon}
-          onSelectMoon={setSelectedMoon}
+          selectedMoon={focus.moon}
+          onSelectMoon={handleMoonClick}
           onReset={handleResetView}
         />
       )}
 
-      <BodySelector focused={focusedPlanet} onSelect={handlePlanetClick} />
+      <BodySelector focused={focus.planet} onSelect={handlePlanetClick} />
 
       <Canvas camera={{ position: [0, 180, 420], fov: 45, far: 20000 }} onPointerMissed={handleResetView}>
         <ambientLight intensity={0.45} />
@@ -65,9 +85,9 @@ export function SolarSystemMap() {
         <Stars radius={800} depth={400} count={15000} factor={6} fade />
 
         <CameraController
-          targetPosition={target ? target.pos : null}
-          targetSize={target ? target.size : 1}
-          focusKey={`${focusedPlanet ?? 'home'}-${selectedMoon ?? 'none'}`}
+          targetCoords={targetCoords}
+          targetSize={targetSize}
+          focusKey={`${focus.planet ?? 'home'}-${focus.moon ?? 'none'}`}
         />
 
         <Sun onSelect={() => handlePlanetClick('Sol')} />
@@ -77,10 +97,10 @@ export function SolarSystemMap() {
             key={planet.name}
             data={planet}
             position={positions[planet.name] ?? ORIGIN}
-            isFocused={focusedPlanet === planet.name}
-            selectedMoon={selectedMoon}
+            isFocused={focus.planet === planet.name}
+            selectedMoon={focus.moon}
             onPlanetClick={() => handlePlanetClick(planet.name)}
-            onMoonClick={setSelectedMoon}
+            onMoonClick={handleMoonClick}
           />
         ))}
       </Canvas>

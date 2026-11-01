@@ -37,7 +37,12 @@ export function useFetch<T>(url: string | null, parse: (json: unknown) => T): Fe
       try {
         const response = await fetch(url, { signal: controller.signal });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = parse(await response.json());
+        const rawJson: unknown = await response.json();
+        // Comprobamos también aquí si se abortó mientras se leía o parseaba el cuerpo,
+        // para no llamar nunca a setSettled en el camino de éxito tras un abort.
+        if (controller.signal.aborted) return;
+        const data = parse(rawJson);
+        if (controller.signal.aborted) return;
         setSettled({ key, data, error: null });
       } catch (err: unknown) {
         if (controller.signal.aborted) return;

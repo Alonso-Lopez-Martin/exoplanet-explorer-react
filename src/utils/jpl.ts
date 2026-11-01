@@ -1,12 +1,18 @@
 import * as THREE from 'three';
 import { fallbackAU, SOLAR_SCALE } from '../data/solarSystem';
 
+export interface JplResult {
+  position: THREE.Vector3;
+  fromFallback: boolean;
+}
+
 // Posición heliocéntrica de un cuerpo (JPL Horizons) en unidades de escena.
 // Si la API falla se devuelve una posición circular aproximada para que el
-// mapa nunca se quede sin planetas.
+// mapa nunca se quede sin planetas, indicando `fromFallback: true` para poder
+// informar al usuario en la interfaz.
 // Recibe un AbortSignal: si el componente se desmonta mientras la petición
 // sigue viva, se cancela de verdad en lugar de dejarla colgando.
-export async function fetchJPLPosition(commandId: string, index: number, signal?: AbortSignal): Promise<THREE.Vector3> {
+export async function fetchJPLPosition(commandId: string, index: number, signal?: AbortSignal): Promise<JplResult> {
   const dist = fallbackAU[commandId] * SOLAR_SCALE;
   const fallbackAngle = (index * 1.1) + 0.5;
   const fallbackPos = new THREE.Vector3(Math.cos(fallbackAngle) * dist, 0, Math.sin(fallbackAngle) * dist);
@@ -17,7 +23,7 @@ export async function fetchJPLPosition(commandId: string, index: number, signal?
 
   try {
     const res = await fetch(url, { signal });
-    if (!res.ok) return fallbackPos;
+    if (!res.ok) return { position: fallbackPos, fromFallback: true };
     const text = await res.text();
     const soeIndex = text.indexOf('$$SOE');
     const eoeIndex = text.indexOf('$$EOE');
@@ -29,17 +35,20 @@ export async function fetchJPLPosition(commandId: string, index: number, signal?
       const zMatch = dataBlock.match(/Z\s*=\s*([-0-9.E+]+)/);
 
       if (xMatch && yMatch && zMatch) {
-        return new THREE.Vector3(
-          parseFloat(xMatch[1]) * SOLAR_SCALE,
-          parseFloat(zMatch[1]) * SOLAR_SCALE,
-          -parseFloat(yMatch[1]) * SOLAR_SCALE
-        );
+        return {
+          position: new THREE.Vector3(
+            parseFloat(xMatch[1]) * SOLAR_SCALE,
+            parseFloat(zMatch[1]) * SOLAR_SCALE,
+            -parseFloat(yMatch[1]) * SOLAR_SCALE
+          ),
+          fromFallback: false,
+        };
       }
     }
   } catch (err) {
-    // Una cancelación no es un fallo de red: se propaga para que quien llama pare el bucle.
+    // Una cancelación no es un fallo de red: se propaga para que quien llama pare el proceso.
     if (signal?.aborted) throw err;
     console.warn(`Fallback orbital usado para ${commandId}`);
   }
-  return fallbackPos;
+  return { position: fallbackPos, fromFallback: true };
 }

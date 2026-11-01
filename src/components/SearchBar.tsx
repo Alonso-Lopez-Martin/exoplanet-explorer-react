@@ -2,17 +2,23 @@ import { useState } from 'react';
 import { Search } from 'lucide-react';
 
 interface SearchBarProps {
+  initialQuery?: string;
   onSearch: (query: string) => void;
   loading: boolean;
 }
 
-export function SearchBar({ onSearch, loading }: SearchBarProps) {
-  const [input, setInput] = useState('');
+// SearchBar mantiene su propio estado `draft` para el texto que el usuario está
+// tecleando. Es deliberado: si compartiera directamente `searchQuery` del padre,
+// cada tecla pulsada dispararía una petición HTTP al servidor TAP de la NASA.
+// Así disparamos la búsqueda únicamente al hacer submit del formulario.
+export function SearchBar({ initialQuery = '', onSearch, loading }: SearchBarProps) {
+  const [input, setInput] = useState(initialQuery);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim()) {
-      onSearch(input.trim());
+    const trimmed = input.trim();
+    if (trimmed) {
+      onSearch(trimmed);
     }
   };
 

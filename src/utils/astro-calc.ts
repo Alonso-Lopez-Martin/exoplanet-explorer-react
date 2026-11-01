@@ -10,6 +10,12 @@ export interface Exoplanet {
   sy_dist: number | null;
 }
 
+export interface FormattedStat {
+  label: string;
+  value: string | number | null;
+  unit?: string;
+}
+
 export interface PlanetMetrics {
   densidad: number | null;
   gravedad: number | null;
@@ -18,6 +24,15 @@ export interface PlanetMetrics {
   tipoPlaneta: string;
   textura: string;
   radioBase: number;
+  sizePx: number;
+  stats: FormattedStat[];
+}
+
+// Helper puro para redondear a N decimales sin ensuciar el JSX de los componentes.
+function roundTo(val: number | null, decimals = 2): number | null {
+  if (val === null) return null;
+  const factor = Math.pow(10, decimals);
+  return Math.round(val * factor) / factor;
 }
 
 export function calculateMetrics(planet: Exoplanet): PlanetMetrics {
@@ -88,5 +103,23 @@ export function calculateMetrics(planet: Exoplanet): PlanetMetrics {
   const arraySeleccionado = texturas[texturaCategoria];
   const textura = arraySeleccionado[orbitalSeed % arraySeleccionado.length];
 
-  return { densidad, gravedad, distAL, habitabilidad, tipoPlaneta, textura, radioBase };
+  // Calculamos el tamaño en píxeles y formateamos todas las tarjetas de datos aquí,
+  // de modo que PlanetViewer se limite a pintar datos ya listos sin ternarios inline.
+  const sizePx = Math.round(150 * Math.min(Math.max(radioBase, 0.5), 2.5));
+  const radioFormateado = planet.pl_rade != null ? planet.pl_rade : `~${roundTo(radioBase, 1)}`;
+
+  const stats: FormattedStat[] = [
+    { label: 'Clasificación', value: tipoPlaneta },
+    { label: 'Habitabilidad', value: habitabilidad },
+    { label: 'Estrella', value: planet.hostname },
+    { label: 'Distancia', value: distAL, unit: 'Años Luz' },
+    { label: 'Gravedad', value: roundTo(gravedad, 2), unit: 'x 🌍 (g)' },
+    { label: 'Radio', value: radioFormateado, unit: 'x 🌍' },
+    { label: 'Masa', value: planet.pl_bmasse, unit: 'x 🌍' },
+    { label: 'Densidad', value: roundTo(densidad, 2), unit: 'g/cm³' },
+    { label: 'Temperatura', value: planet.pl_eqt, unit: 'K' },
+    { label: 'Descubrimiento', value: `${planet.disc_year} (${planet.discoverymethod})` },
+  ];
+
+  return { densidad, gravedad, distAL, habitabilidad, tipoPlaneta, textura, radioBase, sizePx, stats };
 }
