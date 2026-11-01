@@ -2,7 +2,8 @@ import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { useRef } from 'react';
 import * as THREE from 'three';
-import type { PlanetData } from '../../data/solarSystem';
+// Importamos también MoonData para tipar el map
+import type { PlanetData, MoonData } from '../../data/solarSystem';
 import { OrbitPath } from './OrbitPath';
 import { MoonBody } from './MoonBody';
 import { BodyLabel } from './BodyLabel';
@@ -31,6 +32,11 @@ export function PlanetBody({ data, position, isFocused, selectedMoon, onPlanetCl
     }
   });
 
+  const baseEmissive = data.tint ? new THREE.Color(data.tint) : EMISSIVE_IDLE;
+  const activeEmissive = isFocused 
+    ? new THREE.Color(baseEmissive).add(EMISSIVE_FOCUSED) 
+    : baseEmissive;
+
   return (
     <group>
       {orbitRadius > 0 && <OrbitPath radius={orbitRadius} color={data.color} opacity={isFocused ? 0.65 : 0.35} />}
@@ -42,13 +48,17 @@ export function PlanetBody({ data, position, isFocused, selectedMoon, onPlanetCl
           {...hoverCursor}
         >
           <sphereGeometry args={[data.size, 64, 64]} />
-          {/* `tint` multiplica la textura: así un planeta con textura prestada (Urano) se distingue del original */}
-          <meshStandardMaterial map={texture} color={data.tint ?? '#ffffff'} emissive={isFocused ? EMISSIVE_FOCUSED : EMISSIVE_IDLE} />
+          <meshStandardMaterial 
+            map={texture} 
+            color="#ffffff" 
+            emissive={activeEmissive} 
+          />
         </mesh>
 
         <BodyLabel name={data.name} variant="planet" active={isFocused} color={data.color} height={data.size + 1.8} onSelect={onPlanetClick} />
 
-        {isFocused && data.moons.map(moon => (
+        {/* Tipado estricto explícito en el map para evitar el error de 'any' */}
+        {isFocused && data.moons.map((moon: MoonData) => (
           <MoonBody
             key={moon.name}
             data={moon}

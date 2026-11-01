@@ -31,7 +31,8 @@ export interface PlanetData {
 //   ninguno de los dos. Charon es una superficie gris y craterizada, así que
 //   encaja visualmente. Esta sustitución está hablada y aceptada con el profesor.
 // - Urano tampoco tenía textura propia disponible: reutiliza la de Neptuno y
-//   se le aplica un `tint` verdoso para que no se vean idénticos.
+//   se le aplica un `tint` (usado como emisivo) para darle su característico
+//   tono azul clarito/pálido y diferenciarlo del azul profundo de Neptuno.
 export const planetsData: PlanetData[] = [
   { 
     id: '199', name: 'Mercurio', size: 2.4, texture: '/Pluto_Charon.jpg', type: 'Planeta Rocoso', color: '#a8a8a8',
@@ -82,7 +83,7 @@ export const planetsData: PlanetData[] = [
     ]
   },
   { 
-    id: '799', name: 'Urano', size: 5.0, texture: '/Neptune.jpg', tint: '#9fe8ee', type: 'Gigante de Hielo', color: '#73d2de',
+    id: '799', name: 'Urano', size: 5.0, texture: '/Neptune.jpg', tint: '#4488aa', type: 'Gigante de Hielo', color: '#73d2de',
     description: 'Un gigante de hielo único que rota prácticamente de lado respecto a su plano orbital.',
     moons: [
       { name: 'Ariel', size: 0.5, distance: 12, speed: 0.014, texture: '/Uranus_Ariel.jpg', type: 'Satélite', description: 'La más brillante y joven de las lunas de Urano.' },

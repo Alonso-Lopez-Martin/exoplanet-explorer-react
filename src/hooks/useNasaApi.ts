@@ -1,24 +1,65 @@
-import type { Exoplanet } from '../utils/astro-calc';
 import { useFetch } from './useFetch';
+import type { Exoplanet } from '../utils/astro-calc';
 
 const NO_RESULTS: Exoplanet[] = [];
-
 const API_BASE = import.meta.env.DEV ? '/api/nasa' : 'https://exoplanetarchive.ipac.caltech.edu';
 
+// Diccionario local estático.
+// Claves: SIEMPRE en minúsculas, sin tildes y con espacios simples.
+const LOCAL_ALIASES: Record<string, string> = {
+  "belerofonte": "51 Peg b",
+  "51 pegasi b": "51 Peg b",
+  "osiris": "HD 209458 b",
+  "matusalen": "PSR B1620-26 b",
+  "methuselah": "PSR B1620-26 b",
+  "galileo": "55 Cnc b",
+  "brahe": "55 Cnc c",
+  "lippershey": "55 Cnc d",
+  "janssen": "55 Cnc e",
+  "harriot": "55 Cnc f",
+  "dagon": "Fomalhaut b",
+  "poltergeist": "PSR B1257+12 c",
+  "phobetor": "PSR B1257+12 d",
+  "draugr": "PSR B1257+12 b",
+  "smertrios": "HD 149026 b",
+  "proxima centauri b": "Proxima Cen b",
+  "proxima b": "Proxima Cen b",
+  "ct chamaeleontis b": "CT Cha b", // Solución directa para la abreviatura de constelación
+  "koi-571.05": "Kepler-186 f",
+  "koi 571.05": "Kepler-186 f"
+};
+
+// --- CONSTRUCCIÓN DE CONSULTA PRINCIPAL ---
 function buildUrl(query: string): string {
-  // Normalizamos el input (ej. "Kepler-22b" -> "Kepler-22 b")
-  const cleanQuery = query.toLowerCase().trim().replace(/([0-9])([a-z])/g, '$1 $2');
+  let cleanQuery = query.toLowerCase().trim();
   
-  // Escapamos SOLO la comilla simple para mantener la sintaxis SQL intacta.
-  const sqlSafe = cleanQuery.replaceAll(/'/g, "''");
+  // 1. Quitar acentos para poder comparar bien con el diccionario local
+  cleanQuery = cleanQuery.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // 2. Comprobar si el nombre normalizado está en nuestro diccionario de alias
+  if (LOCAL_ALIASES[cleanQuery]) {
+    cleanQuery = LOCAL_ALIASES[cleanQuery].toLowerCase();
+  }
   
-  // Consulta limpia sin la problemática cláusula ESCAPE que crashea el servidor de la NASA.
+  // 3. Arreglo TRAPPIST: Forzar guion y espacio (trappist1b, trappist-1b -> trappist-1 b)
+  cleanQuery = cleanQuery.replace(/trappist[\s-]*1[\s-]*([a-z])/g, 'trappist-1 $1');
+  
+  // 4. Insertar espacio entre número y letra (genérico para Kepler, TOI, etc.)
+  if (!cleanQuery.includes('trappist')) {
+    cleanQuery = cleanQuery.replace(/([0-9])([a-z])/g, '$1 $2');
+  }
+  
+  // 5. Escapar comillas simples para que la consulta SQL no se rompa
+  let sqlSafe = cleanQuery.replaceAll(/'/g, "''");
+  
+  // 6. Convertir múltiples espacios (y guiones/sumas sueltos) en el comodín %
+  sqlSafe = sqlSafe.replace(/[-+\s]+/g, '%');
+
   const sql = `select pl_name,pl_rade,pl_bmasse,pl_eqt,pl_orbper,discoverymethod,disc_year,hostname,sy_dist from ps where default_flag=1 and lower(pl_name) like '%${sqlSafe}%'`;
   
   return `${API_BASE}/TAP/sync?query=${encodeURIComponent(sql)}&format=json`;
 }
 
-// Función de módulo (identidad estable) para que useFetch no relance el efecto.
 function parseExoplanets(json: unknown): Exoplanet[] {
   if (!Array.isArray(json)) throw new Error('Formato inválido.');
   const unique = new Map<string, Exoplanet>();
@@ -28,8 +69,17 @@ function parseExoplanets(json: unknown): Exoplanet[] {
   return [...unique.values()].sort((a, b) => (a.disc_year || 0) - (b.disc_year || 0));
 }
 
-// Capa fina sobre el hook genérico useFetch
+// --- HOOK PRINCIPAL ---
 export function useNasaApi(query: string) {
-  const { data, loading, error, reload } = useFetch(query ? buildUrl(query) : null, parseExoplanets);
-  return { data: data ?? NO_RESULTS, loading, error, reload };
+  // Construimos la URL de forma síncrona.
+  const activeUrl = query ? buildUrl(query) : null;
+  
+  const { data, loading, error, reload } = useFetch(activeUrl, parseExoplanets);
+
+  return { 
+    data: data ?? NO_RESULTS, 
+    loading, 
+    error, 
+    reload 
+  };
 }
