@@ -7,8 +7,9 @@ interface RecentSearchesProps {
   onClear: () => void;
 }
 
-// Barra de búsquedas recientes persistida en localStorage. Permite saltar con un
-// clic a consultas anteriores sin volver a teclearlas.
+// Barra de búsquedas recientes persistida en localStorage.
+// Usamos `item.toLowerCase()` como key para que sea imposible una colisión
+// aunque dos entradas difirieran en mayúsculas.
 export function RecentSearches({ history, currentQuery, onSelectQuery, onClear }: RecentSearchesProps) {
   if (history.length === 0) return null;
 
@@ -16,10 +17,11 @@ export function RecentSearches({ history, currentQuery, onSelectQuery, onClear }
     <div className="recent-searches">
       <span className="matches-label">Búsquedas recientes:</span>
       {history.map((item) => {
-        const isCurrent = item.toLowerCase() === currentQuery.toLowerCase();
+        const canonicalKey = item.toLowerCase();
+        const isCurrent = canonicalKey === currentQuery.toLowerCase();
         return (
           <button
-            key={item}
+            key={canonicalKey}
             type="button"
             aria-pressed={isCurrent}
             className={cn('match-btn', isCurrent && 'active')}

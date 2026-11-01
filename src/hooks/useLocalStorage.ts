@@ -1,12 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Hook genérico para persistir estado en localStorage.
-// - No escribe en disco si el valor serializado ya coincide con el almacenado (evita escrituras redundantes en el montaje).
-// - Escucha el evento 'storage' de window para mantener sincronizadas varias pestañas abiertas de la app.
+// - No escribe en disco si el valor serializado ya coincide con el almacenado.
+// - Escucha el evento 'storage' de window dependiendo únicamente de `[key]`.
+//   Guardamos `initialValue` en `initialValueRef` para que si alguien pasa un
+//   array/objeto literal (ej. `[]`) no se re-suscriba el listener en cada render.
 export function useLocalStorage<T>(
   key: string,
   initialValue: T
 ): [T, (value: T | ((prev: T) => T)) => void] {
+  const initialValueRef = useRef<T>(initialValue);
+
+  useEffect(() => {
+    initialValueRef.current = initialValue;
+  }, [initialValue]);
+
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
       const item = window.localStorage.getItem(key);
@@ -16,7 +24,7 @@ export function useLocalStorage<T>(
     }
   });
 
-  // Sincroniza hacia localStorage solo cuando el valor cambia de verdad respecto a lo que hay guardado.
+  // Sincroniza hacia localStorage solo cuando el valor cambia de verdad respecto a lo guardado.
   useEffect(() => {
     try {
       const serialized = JSON.stringify(storedValue);
@@ -29,19 +37,22 @@ export function useLocalStorage<T>(
   }, [key, storedValue]);
 
   // Escucha cambios hechos en otras pestañas sobre la misma clave.
+  // Depende solo de `[key]` y lee `initialValueRef.current` para no re-suscribir el listener.
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key !== key) return;
       try {
-        setStoredValue(e.newValue !== null ? (JSON.parse(e.newValue) as T) : initialValue);
+        setStoredValue(
+          e.newValue !== null ? (JSON.parse(e.newValue) as T) : initialValueRef.current
+        );
       } catch {
-        setStoredValue(initialValue);
+        setStoredValue(initialValueRef.current);
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [key, initialValue]);
+  }, [key]);
 
   return [storedValue, setStoredValue];
 }

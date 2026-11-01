@@ -1,4 +1,4 @@
-import { calculateMetrics, roundTo, type Exoplanet } from '../utils/astro-calc';
+import { calculateMetrics, roundTo, type Exoplanet, type PlanetMetrics } from '../utils/astro-calc';
 import { PlanetSphere } from './PlanetSphere';
 
 interface PlanetComparisonProps {
@@ -7,42 +7,42 @@ interface PlanetComparisonProps {
   onClose: () => void;
 }
 
-// Comparador cara a cara entre un exoplaneta fijado en memoria y el que se está
-// visualizando actualmente. Deriva todas las métricas al vuelo con calculateMetrics.
+interface ComparisonField {
+  label: string;
+  getValue: (planet: Exoplanet, metrics: PlanetMetrics) => string | number | null;
+}
+
+// Helper único para formatear celdas vacías o nulas sin repetir 'Desconocida' en cada fila.
+function formatCell(value: string | number | null): string | number {
+  return value !== null && value !== '' ? value : 'Desconocida';
+}
+
+// Lista declarativa de campos de la tabla comparativa: añadir o cambiar una fila
+// no requiere duplicar ternarios ni lógica de formato.
+const COMPARISON_FIELDS: ComparisonField[] = [
+  { label: 'Clasificación', getValue: (_p, m) => m.tipoPlaneta },
+  { label: 'Habitabilidad', getValue: (_p, m) => m.habitabilidad },
+  {
+    label: 'Radio (x 🌍)',
+    getValue: (p, m) => p.pl_rade ?? `~${roundTo(m.radioBase, 1)}`,
+  },
+  { label: 'Masa (x 🌍)', getValue: (p) => p.pl_bmasse },
+  { label: 'Gravedad (g)', getValue: (_p, m) => roundTo(m.gravedad, 2) },
+  { label: 'Densidad (g/cm³)', getValue: (_p, m) => roundTo(m.densidad, 2) },
+  { label: 'Temperatura (K)', getValue: (p) => p.pl_eqt },
+  { label: 'Distancia (Años Luz)', getValue: (_p, m) => m.distAL },
+];
+
+// Comparador cara a cara entre un exoplaneta fijado y el que se visualiza actualmente.
 export function PlanetComparison({ basePlanet, currentPlanet, onClose }: PlanetComparisonProps) {
   const baseMetrics = calculateMetrics(basePlanet);
   const currentMetrics = calculateMetrics(currentPlanet);
 
-  const rows = [
-    { label: 'Clasificación', a: baseMetrics.tipoPlaneta, b: currentMetrics.tipoPlaneta },
-    { label: 'Habitabilidad', a: baseMetrics.habitabilidad, b: currentMetrics.habitabilidad },
-    {
-      label: 'Radio (x 🌍)',
-      a: basePlanet.pl_rade ?? `~${roundTo(baseMetrics.radioBase, 1)}`,
-      b: currentPlanet.pl_rade ?? `~${roundTo(currentMetrics.radioBase, 1)}`,
-    },
-    { label: 'Masa (x 🌍)', a: basePlanet.pl_bmasse ?? 'Desconocida', b: currentPlanet.pl_bmasse ?? 'Desconocida' },
-    {
-      label: 'Gravedad (g)',
-      a: roundTo(baseMetrics.gravedad, 2) ?? 'Desconocida',
-      b: roundTo(currentMetrics.gravedad, 2) ?? 'Desconocida',
-    },
-    {
-      label: 'Densidad (g/cm³)',
-      a: roundTo(baseMetrics.densidad, 2) ?? 'Desconocida',
-      b: roundTo(currentMetrics.densidad, 2) ?? 'Desconocida',
-    },
-    {
-      label: 'Temperatura (K)',
-      a: basePlanet.pl_eqt ?? 'Desconocida',
-      b: currentPlanet.pl_eqt ?? 'Desconocida',
-    },
-    {
-      label: 'Distancia (Años Luz)',
-      a: baseMetrics.distAL ?? 'Desconocida',
-      b: currentMetrics.distAL ?? 'Desconocida',
-    },
-  ];
+  const rows = COMPARISON_FIELDS.map((field) => ({
+    label: field.label,
+    a: formatCell(field.getValue(basePlanet, baseMetrics)),
+    b: formatCell(field.getValue(currentPlanet, currentMetrics)),
+  }));
 
   return (
     <section className="comparison-panel" aria-label="Comparador de exoplanetas">
@@ -73,7 +73,7 @@ export function PlanetComparison({ basePlanet, currentPlanet, onClose }: PlanetC
           </tr>
         </thead>
         <tbody>
-          {rows.map(row => (
+          {rows.map((row) => (
             <tr key={row.label}>
               <td>{row.label}</td>
               <td>{row.a}</td>
