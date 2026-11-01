@@ -1,4 +1,4 @@
-import type{ Exoplanet } from '../utils/astro-calc';
+import type { Exoplanet } from '../utils/astro-calc';
 
 interface PlanetListProps {
   planets: Exoplanet[];
@@ -14,7 +14,9 @@ export function PlanetList({ planets, selectedPlanet, onSelect }: PlanetListProp
       <span style={{ color: 'var(--text-color)', marginRight: '10px' }}>Encontrados en este sector:</span>
       {planets.map((planet) => (
         <button
+          type="button"
           key={planet.pl_name}
+          aria-pressed={selectedPlanet?.pl_name === planet.pl_name}
           className={`match-btn ${selectedPlanet?.pl_name === planet.pl_name ? 'active' : ''}`}
           onClick={() => onSelect(planet)}
         >
