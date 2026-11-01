@@ -24,7 +24,7 @@ const INITIAL_FOCUS: FocusState = { planet: null, moon: null };
 // no tener que resetear `selectedMoon` a mano en varios handlers, y delega el
 // dibujo en los componentes de esta carpeta. Todo lo demás se deriva.
 export function SolarSystemMap() {
-  const { positions, loading, usingFallback, error } = useJplPositions();
+  const { positions, loading } = useJplPositions();
   const [focus, setFocus] = useState<FocusState>(INITIAL_FOCUS);
 
   const handlePlanetClick = (planetName: string) => {
@@ -57,14 +57,6 @@ export function SolarSystemMap() {
   return (
     <div className="solar-map-container">
       {loading && <SolarLoadingOverlay />}
-
-      {!loading && (error || usingFallback) && (
-        <div role="status" className="solar-fallback-banner">
-          {error
-            ? `⚠ ${error}. Mostrando órbitas de reserva.`
-            : 'ℹ Efemérides en vivo no disponibles temporalmente; mostrando posiciones orbitales aproximadas.'}
-        </div>
-      )}
 
       {focus.planet && (
         <BodyInfoPanel
