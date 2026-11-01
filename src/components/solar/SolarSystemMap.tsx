@@ -24,7 +24,7 @@ const INITIAL_FOCUS: FocusState = { planet: null, moon: null };
 // no tener que resetear `selectedMoon` a mano en varios handlers, y delega el
 // dibujo en los componentes de esta carpeta. Todo lo demás se deriva.
 export function SolarSystemMap() {
-  const { positions, loading, usingFallback } = useJplPositions();
+  const { positions, loading, usingFallback, error } = useJplPositions();
   const [focus, setFocus] = useState<FocusState>(INITIAL_FOCUS);
 
   const handlePlanetClick = (planetName: string) => {
@@ -39,8 +39,6 @@ export function SolarSystemMap() {
     setFocus(INITIAL_FOCUS);
   };
 
-  // Valores derivados: son búsquedas baratas sobre un array de 8 elementos,
-  // por eso se calculan en cada render en vez de memoizarlas o guardarlas en estado.
   const currentPlanet = planetsData.find(p => p.name === focus.planet) ?? null;
   const currentMoon = currentPlanet?.moons.find(m => m.name === focus.moon) ?? null;
 
@@ -60,9 +58,11 @@ export function SolarSystemMap() {
     <div className="solar-map-container">
       {loading && <SolarLoadingOverlay />}
 
-      {!loading && usingFallback && (
+      {!loading && (error || usingFallback) && (
         <div role="status" className="solar-fallback-banner">
-          ℹ Efemérides en vivo no disponibles temporalmente; mostrando posiciones orbitales aproximadas.
+          {error
+            ? `⚠ ${error}. Mostrando órbitas de reserva.`
+            : 'ℹ Efemérides en vivo no disponibles temporalmente; mostrando posiciones orbitales aproximadas.'}
         </div>
       )}
 

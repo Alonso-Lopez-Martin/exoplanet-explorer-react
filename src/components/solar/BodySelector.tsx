@@ -1,4 +1,5 @@
 import { planetsData } from '../../data/solarSystem';
+import { cn } from '../../utils/cn';
 
 interface BodySelectorProps {
   focused: string | null;
@@ -6,22 +7,17 @@ interface BodySelectorProps {
 }
 
 // Barra inferior para saltar a cualquier astro sin tener que clicar en la escena.
+// Usa clases CSS en index.css (.body-selector, .selector-chip) y el helper `cn`.
 export function BodySelector({ focused, onSelect }: BodySelectorProps) {
+  const isSunActive = focused === 'Sol';
+
   return (
-    <div style={{
-      position: 'absolute', bottom: '15px', left: '50%', transform: 'translateX(-50%)',
-      display: 'flex', gap: '8px', background: 'rgba(10, 14, 22, 0.85)', padding: '8px 14px',
-      borderRadius: '20px', border: '1px solid #2a3546', zIndex: 15, flexWrap: 'wrap', justifyContent: 'center'
-    }}>
+    <div className="body-selector">
       <button
         type="button"
-        aria-pressed={focused === 'Sol'}
+        aria-pressed={isSunActive}
+        className={cn('selector-chip', 'selector-chip-sun', isSunActive && 'active')}
         onClick={() => onSelect('Sol')}
-        style={{
-          background: focused === 'Sol' ? '#ffcc00' : 'transparent',
-          color: focused === 'Sol' ? '#000' : '#ffcc00',
-          border: '1px solid #ffcc00', borderRadius: '12px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer', fontWeight: 600
-        }}
       >
         ☀ Sol
       </button>
@@ -32,13 +28,8 @@ export function BodySelector({ focused, onSelect }: BodySelectorProps) {
             key={p.name}
             type="button"
             aria-pressed={isActive}
+            className={cn('selector-chip', isActive && 'active')}
             onClick={() => onSelect(p.name)}
-            style={{
-              background: isActive ? '#00d2ff' : 'transparent',
-              color: isActive ? '#000' : '#ddd',
-              border: `1px solid ${isActive ? '#00d2ff' : '#334155'}`,
-              borderRadius: '12px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer', fontWeight: 600
-            }}
           >
             {p.name}
           </button>

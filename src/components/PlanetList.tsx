@@ -1,4 +1,5 @@
 import type { Exoplanet } from '../utils/astro-calc';
+import { cn } from '../utils/cn';
 
 interface PlanetListProps {
   planets: Exoplanet[];
@@ -11,18 +12,16 @@ export function PlanetList({ planets, selectedPlanet, onSelect }: PlanetListProp
 
   return (
     <div className="matches-container">
-      <span style={{ color: 'var(--text-color)', marginRight: '10px' }}>Encontrados en este sector:</span>
+      <span className="matches-label">Encontrados en este sector:</span>
       {planets.map((planet) => {
-        // Se calcula una sola vez por botón y se reutiliza en aria y en la clase.
+        // Se calcula una sola vez por botón y se reutiliza en aria y en la clase con `cn`.
         const isActive = selectedPlanet?.pl_name === planet.pl_name;
-        // Evitamos dejar un espacio final sobrante ("match-btn ") cuando isActive es false.
-        const btnClass = ['match-btn', isActive && 'active'].filter(Boolean).join(' ');
         return (
           <button
             type="button"
             key={planet.pl_name}
             aria-pressed={isActive}
-            className={btnClass}
+            className={cn('match-btn', isActive && 'active')}
             onClick={() => onSelect(planet)}
           >
             {planet.pl_name}

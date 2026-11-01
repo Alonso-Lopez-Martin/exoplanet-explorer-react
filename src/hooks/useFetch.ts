@@ -26,20 +26,23 @@ export function useFetch<T>(url: string | null, parse: (json: unknown) => T): Fe
   const [settled, setSettled] = useState<Settled<T> | null>(null);
   const [reloads, setReloads] = useState(0);
 
+  // `key` incluye tanto el contador de recargas como la propia `url`.
+  // Así el efecto depende solo de `[key, parse]` sin duplicar `url` en las dependencias.
   const key = url === null ? null : `${reloads}:${url}`;
 
   useEffect(() => {
-    if (url === null || key === null) return;
+    if (key === null) return;
 
+    // Extraemos la URL de la propia clave para no tener que poner `url` como dependencia redundante.
+    const separatorIndex = key.indexOf(':');
+    const requestUrl = key.slice(separatorIndex + 1);
     const controller = new AbortController();
 
     (async () => {
       try {
-        const response = await fetch(url, { signal: controller.signal });
+        const response = await fetch(requestUrl, { signal: controller.signal });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const rawJson: unknown = await response.json();
-        // Comprobamos también aquí si se abortó mientras se leía o parseaba el cuerpo,
-        // para no llamar nunca a setSettled en el camino de éxito tras un abort.
         if (controller.signal.aborted) return;
         const data = parse(rawJson);
         if (controller.signal.aborted) return;
@@ -51,7 +54,7 @@ export function useFetch<T>(url: string | null, parse: (json: unknown) => T): Fe
     })();
 
     return () => controller.abort();
-  }, [url, key, parse]);
+  }, [key, parse]);
 
   // Solo cuenta la respuesta que corresponde a la petición actual; una anterior ya es obsoleta.
   const current = settled !== null && settled.key === key ? settled : null;

@@ -348,3 +348,239 @@ button:disabled {
   font-size: 12px;
   z-index: 15;
 }
+
+/* Panel de información del astro (BodyInfoPanel) y selector inferior (BodySelector) */
+.body-info-panel {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 290px;
+  background: rgba(12, 16, 24, 0.92);
+  border: 1px solid #2a3546;
+  border-radius: 10px;
+  padding: 18px;
+  color: #fff;
+  z-index: 15;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  text-align: left;
+}
+
+.body-info-kicker {
+  font-size: 11px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 4px;
+}
+
+.body-info-title {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  color: #fff;
+}
+
+.body-info-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #bdc6d4;
+  margin: 0 0 16px 0;
+}
+
+.body-info-moons {
+  margin-bottom: 16px;
+}
+
+.body-info-moons-label {
+  font-size: 11px;
+  color: #8899aa;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.body-info-moons-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.moon-chip {
+  background: #1b2230;
+  color: #fff;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.moon-chip.active {
+  background: #ffcc00;
+  color: #000;
+}
+
+.body-info-reset-btn {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.body-selector {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  background: rgba(10, 14, 22, 0.85);
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid #2a3546;
+  z-index: 15;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.selector-chip {
+  background: transparent;
+  color: #ddd;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.selector-chip.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+.selector-chip-sun {
+  color: #ffcc00;
+  border-color: #ffcc00;
+}
+
+.selector-chip-sun.active {
+  background: #ffcc00;
+  color: #000;
+  border-color: #ffcc00;
+}
+
+/* Historial de búsquedas recientes y Comparador de Exoplanetas */
+.matches-label {
+  color: var(--text-color);
+  margin-right: 10px;
+  font-size: 0.9em;
+}
+
+.recent-searches {
+  max-width: 1200px;
+  margin: -10px auto 20px auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.recent-clear-btn {
+  padding: 6px 12px;
+  font-size: 0.85em;
+  background: transparent;
+  color: #8b949e;
+  border: 1px solid #30363d;
+  border-radius: 16px;
+}
+
+.viewer-placeholder {
+  color: #666;
+}
+
+.viewer-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.viewer-title-row h3 {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.compare-pin-btn {
+  padding: 10px 18px;
+  font-size: 0.9em;
+}
+
+.comparison-panel {
+  max-width: 1200px;
+  margin: 0 auto 25px auto;
+  background: #11151c;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: left;
+}
+
+.comparison-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.comparison-header h3 {
+  margin: 0;
+  color: var(--accent);
+}
+
+.comparison-spheres {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 20px 0;
+  background: radial-gradient(circle at center, #1a1a2e, #000);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.comparison-sphere-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #222936;
+  text-align: left;
+}
+
+.comparison-table th {
+  color: var(--accent);
+  text-transform: uppercase;
+  font-size: 0.85em;
+}
